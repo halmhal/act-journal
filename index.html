@@ -74,6 +74,11 @@ input[type=range] { flex: 1; accent-color: var(--accent); }
 .date-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
 .date-row label { font-size: 12px; color: var(--text-muted); }
 
+/* Title row */
+.title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.title-row label { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+.title-row input[type=text] { flex: 1; }
+
 /* Weekly header */
 .w-header-row { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
 .w-header-row input[type=number] { width: 64px; }
@@ -111,10 +116,19 @@ input[type=range] { flex: 1; accent-color: var(--accent); }
 .rec-tab-btn { flex: 1; padding: 8px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-family: var(--font); font-size: 13px; }
 .rec-tab-btn.active { background: var(--accent); color: #fff; }
 .rec-list { display: flex; flex-direction: column; gap: 6px; }
-.rec-item { padding: 10px 14px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all .15s; }
-.rec-item:hover { border-color: var(--accent); }
-.rec-item-date { font-size: 13px; font-weight: 600; color: var(--text); }
-.rec-item-preview { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.rec-item { padding: 10px 14px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); }
+.rec-item-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rec-edit-input { font-size: 13px; font-weight: 600; color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; font-family: var(--font); background: #fff; }
+.rec-edit-input:focus { outline: none; border-color: var(--accent); }
+.rec-edit-input.date-input { width: 118px; }
+.rec-edit-input.title-input { flex: 1; min-width: 120px; }
+.rec-save-btn { padding: 3px 10px; border-radius: 4px; border: 1px solid var(--accent); background: #fff; color: var(--accent); cursor: pointer; font-size: 12px; font-weight: 600; font-family: var(--font); white-space: nowrap; }
+.rec-save-btn:hover { background: var(--accent); color: #fff; }
+.rec-open-btn { padding: 3px 10px; border-radius: 4px; border: 1px solid var(--border); background: #fff; color: var(--text-muted); cursor: pointer; font-size: 12px; font-family: var(--font); white-space: nowrap; }
+.rec-open-btn:hover { border-color: var(--accent); color: var(--accent); }
+.rec-del-btn { padding: 3px 8px; border-radius: 4px; border: 1px solid #fca5a5; background: #fff; color: #ef4444; cursor: pointer; font-size: 14px; line-height: 1; font-family: var(--font); white-space: nowrap; flex-shrink: 0; }
+.rec-del-btn:hover { background: #fef2f2; border-color: #ef4444; }
+.rec-preview { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
 .rec-empty { color: var(--text-dim); font-size: 13px; font-style: italic; }
 .example { font-size: 11px; color: var(--text-dim); margin-top: 4px; font-style: italic; }
 
@@ -133,6 +147,9 @@ input[type=range] { flex: 1; accent-color: var(--accent); }
 .modal-hint { font-size: 12px; color: var(--text-muted); }
 .modal-box textarea { flex: 1; min-height: 240px; resize: vertical; font-size: 12px; font-family: var(--mono); }
 .modal-btn-row { display: flex; gap: 10px; justify-content: flex-end; }
+.import-type-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: #fff; color: var(--text-muted); cursor: pointer; font-size: 12px; font-weight: 600; font-family: var(--font); transition: all .15s; }
+.import-type-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+.import-type-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 </style>
 </head>
 <body>
@@ -154,7 +171,12 @@ input[type=range] { flex: 1; accent-color: var(--accent); }
 <div class="modal-overlay" id="import-modal">
   <div class="modal-box">
     <div class="modal-title">テキストをインポート</div>
-    <div class="modal-hint">D.txt または W.txt 形式のテキストをそのままペーストしてください。Daily と Weekly を自動判別してインポートします。</div>
+    <div class="modal-hint">D.txt または W.txt 形式のテキストをそのままペーストしてください。インポート後は一覧に追加されます（フォームは変更しません）。</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+      <button class="import-type-btn active" id="itype-auto" onclick="setImportType('auto')">🔍 自動判別</button>
+      <button class="import-type-btn" id="itype-daily" onclick="setImportType('daily')">📅 Daily</button>
+      <button class="import-type-btn" id="itype-weekly" onclick="setImportType('weekly')">📋 Weekly</button>
+    </div>
     <textarea id="import-textarea" placeholder="ここにテキストをペースト..."></textarea>
     <div class="modal-btn-row">
       <button class="btn btn-secondary" onclick="closeImportModal()">キャンセル</button>
@@ -173,6 +195,11 @@ input[type=range] { flex: 1; accent-color: var(--accent); }
       <input type="text" id="m-weather" style="width:80px" placeholder="☀">
     </div>
 
+    <div class="title-row">
+      <label>タイトル</label>
+      <input type="text" id="m-title" placeholder="例: D5 9/12">
+    </div>
+
     <div class="section">
       <div class="q-title">## 1 【Value clarification（価値の明確化）】今日は、どんな価値（あり方）を大切にして生きますか？</div>
       <div class="inline-sentence">
@@ -188,12 +215,12 @@ input[type=range] { flex: 1; accent-color: var(--accent); }
       <div class="q-hint">※「～すること（to do）」という主体的に実践できる行動（動詞）＋タイミングor場所を書く</div>
       <div class="inline-sentence">
         <span>私は、（</span>
-        <input type="text" id="m-action" placeholder="タブレットのスタンドを用意する、ACTジャーナリング記入フォームを作成する" style="min-width:200px; flex:2">
+        <input type="text" id="m-action" placeholder="タブレットのスタンドを用意する" style="min-width:200px; flex:2">
         <span>）を （</span>
         <input type="text" id="m-place" placeholder="風呂上がり後/自室" style="min-width:120px">
         <span>）で、実行します。</span>
       </div>
-      <div class="example">記入例：行動＝タブレットのスタンドを用意する、ACTジャーナリング記入フォームを作成する ／ 場所＝風呂上がり後/自室</div>
+      <div class="example">記入例：行動＝タブレットのスタンドを用意する ／ 場所＝風呂上がり後/自室</div>
     </div>
 
     <div class="section">
@@ -377,7 +404,7 @@ input[type=range] { flex: 1; accent-color: var(--accent); }
       <div style="font-size:12px;color:var(--accent2);margin-bottom:8px;">【得たいこと】</div>
       <div class="inline-sentence" style="margin-bottom:8px;">
         <span style="white-space:nowrap">・5年後の私は、</span>
-        <input type="text" id="w-v5" placeholder="連載して精神面もさらに安定して自分が進むべき方向を明確にしている、自分で自由に意思決定できる立場になっている" style="min-width:200px;flex:1">
+        <input type="text" id="w-v5" placeholder="連載して精神面もさらに安定して自分が進むべき方向を明確にしている" style="min-width:200px;flex:1">
       </div>
       <div class="inline-sentence" style="margin-bottom:8px;">
         <span style="white-space:nowrap">・3年後の私は、</span>
@@ -404,7 +431,7 @@ input[type=range] { flex: 1; accent-color: var(--accent); }
 
     <div class="section">
       <div class="q-title">## 5 【心得（Mind set）】上記のゴールを達成する過程で、"招かれざる客（妖怪）"が現れた時の心得</div>
-      <textarea id="w-mindset" placeholder="その不快さは、真の学習のサインであり、&#10;自分が人生から欲しいもの（価値）のために、&#10;その不快感は、「殺しには来ないただの感情」だと知り、（本当にそうだ...！）&#10;逃げる方が、中長期的には割に合わないと気づく。" style="min-height:100px;"></textarea>
+      <textarea id="w-mindset" placeholder="その不快さは、真の学習のサインであり..." style="min-height:100px;"></textarea>
     </div>
 
     <div class="section">
@@ -418,7 +445,7 @@ input[type=range] { flex: 1; accent-color: var(--accent); }
       <div style="font-size:12px;color:var(--accent2);margin-bottom:6px;">▼守るルーティン</div>
       <textarea id="w-routine" placeholder="・22:15までには布団に入る。&#10;・朝食後と夕飯後のスキマ時間にCBTワークやる（最低でも週1回）" style="min-height:70px;"></textarea>
       <div style="font-size:12px;color:var(--accent2);margin:10px 0 6px;">▼やらないことリスト</div>
-      <textarea id="w-avoid" placeholder="・早寝して睡眠のバランスをくずす（逆に睡眠が浅くなるから）&#10;・無理やり早起きする（まずは睡眠負債の返済と十分な量を確保する）" style="min-height:70px;"></textarea>
+      <textarea id="w-avoid" placeholder="・早寝して睡眠のバランスをくずす（逆に睡眠が浅くなるから）" style="min-height:70px;"></textarea>
     </div>
 
     <div class="section">
@@ -484,14 +511,8 @@ function toasts(msg) {
   setTimeout(() => t.classList.remove('show'), 2000);
 }
 
-function toggleCheck(lbl) {
-  lbl.classList.toggle('checked');
-  lbl.querySelector('input').checked = lbl.classList.contains('checked');
-}
-
 function initCheckGroups() {
   document.querySelectorAll('.check-group .check-label').forEach(lbl => {
-    lbl.removeAttribute('onclick');
     const inp = lbl.querySelector('input');
     inp.addEventListener('change', function() {
       lbl.classList.toggle('checked', inp.checked);
@@ -520,7 +541,7 @@ function getChecked(groupId) {
 function setChecked(groupId, values) {
   document.querySelectorAll('#' + groupId + ' .check-label').forEach(lbl => {
     const v = lbl.querySelector('input').value;
-    const on = values && values.includes(v);
+    const on = Array.isArray(values) && values.includes(v);
     lbl.classList.toggle('checked', on);
     lbl.querySelector('input').checked = on;
   });
@@ -540,10 +561,6 @@ function setRadio(groupId, value) {
   });
 }
 
-function checkboxLine(items, selected, sep) {
-  return items.map(item => selected.includes(item) ? item + '◯' : item).join(sep || ' / ');
-}
-
 // ─── Morning ─────────────────────────────────────────
 function initMorningDate() {
   const el = document.getElementById('m-date');
@@ -554,6 +571,7 @@ function loadMorning(dateStr) {
   const d = getData();
   const rec = (d.daily[dateStr] && d.daily[dateStr].morning) || {};
   document.getElementById('m-weather').value = rec.weather || '☀';
+  document.getElementById('m-title').value = rec.title || '';
   document.getElementById('m-value').value = rec.value || '';
   document.getElementById('m-action').value = rec.action || '';
   document.getElementById('m-place').value = rec.place || '';
@@ -571,6 +589,7 @@ function saveMorning() {
   if (!d.daily[dateStr]) d.daily[dateStr] = {};
   d.daily[dateStr].morning = {
     weather: document.getElementById('m-weather').value || '☀',
+    title: document.getElementById('m-title').value,
     value: document.getElementById('m-value').value,
     action: document.getElementById('m-action').value,
     place: document.getElementById('m-place').value,
@@ -726,8 +745,9 @@ function buildDailyText(dateStr) {
   const microLine = MICRO_ITEMS.map(x => m.micro && m.micro.includes(x) ? x + '◯' : x).join(' / ');
   const obsLines = OBS_ITEMS.map(x => '- ' + x + (e.observe === x ? '◯' : '')).join('\n');
   const learnLines = LEARN_ITEMS.map(x => '- ' + x + (e.learning && e.learning.includes(x) ? '◯' : '')).join('\n');
+  const titleLine = m.title ? m.title + '\n' : '';
 
-  return `天気：${m.weather || '☀'}
+  return `${titleLine}天気：${m.weather || '☀'}
 
 # Daily Morning
 
@@ -938,8 +958,6 @@ function renderEveningRightPanel(dateStr) {
 function renderWeeklyRightPanel(ws) {
   const d = getData();
   const wsDate = new Date(ws + 'T00:00:00');
-  const weDate = new Date(wsDate);
-  weDate.setDate(wsDate.getDate() + 6);
   const el = document.getElementById('weekly-daily-ref');
   const days = [];
   for (let i = 0; i <= 6; i++) {
@@ -961,7 +979,7 @@ function renderWeeklyRightPanel(ws) {
       if (!rec) return;
       const val = sec.field(rec);
       if (!val) return;
-      rows += `<div class="panel-item">${day.slice(5)} <span class="panel-item-date"></span>${escHtml(val)}</div>`;
+      rows += `<div class="panel-item">${day.slice(5)} ${escHtml(val)}</div>`;
     });
     if (rows) html += `<div class="panel-section"><div class="panel-section-head">${sec.label}</div>${rows}</div>`;
   });
@@ -982,6 +1000,67 @@ function switchRecTab(mode) {
   renderRecords();
 }
 
+// Delete records
+function deleteRecDaily(dateStr) {
+  if (!confirm(dateStr + ' の Daily 記録を削除しますか？この操作は元に戻せません。')) return;
+  const d = getData();
+  delete d.daily[dateStr];
+  setData(d);
+  toasts('削除しました');
+  renderRecords();
+}
+
+function deleteRecWeekly(ws) {
+  if (!confirm(ws + ' 週の Weekly 記録を削除しますか？この操作は元に戻せません。')) return;
+  const d = getData();
+  delete d.weekly[ws];
+  setData(d);
+  toasts('削除しました');
+  renderRecords();
+}
+
+// Inline editing: save daily record date/title
+function saveRecDaily(oldDate, newDate, newTitle) {
+  newDate = newDate.trim();
+  newTitle = newTitle.trim();
+  if (!newDate) { toasts('日付を入力してください'); return; }
+  const d = getData();
+  if (!d.daily[oldDate]) { toasts('レコードが見つかりません'); return; }
+  if (newDate !== oldDate) {
+    if (d.daily[newDate]) {
+      if (!confirm('日付 ' + newDate + ' のデータがすでに存在します。上書きしますか？')) return;
+    }
+    d.daily[newDate] = d.daily[oldDate];
+    delete d.daily[oldDate];
+  }
+  if (!d.daily[newDate].morning) d.daily[newDate].morning = {};
+  d.daily[newDate].morning.title = newTitle;
+  setData(d);
+  toasts('保存しました');
+  renderRecords();
+}
+
+// Inline editing: save weekly record date/title
+function saveRecWeekly(oldWs, newDateStr, newTitle) {
+  newDateStr = newDateStr.trim();
+  newTitle = newTitle.trim();
+  if (!newDateStr) { toasts('日付を入力してください'); return; }
+  const newWs = weekStart(newDateStr);
+  const d = getData();
+  if (!d.weekly[oldWs]) { toasts('レコードが見つかりません'); return; }
+  if (newWs !== oldWs) {
+    if (d.weekly[newWs]) {
+      if (!confirm('週 ' + newWs + ' のデータがすでに存在します。上書きしますか？')) return;
+    }
+    d.weekly[newWs] = d.weekly[oldWs];
+    delete d.weekly[oldWs];
+  }
+  d.weekly[newWs].title = newTitle;
+  setData(d);
+  toasts('保存しました');
+  renderRecords();
+}
+
 function renderRecords() {
   const d = getData();
   const el = document.getElementById('rec-list');
@@ -989,23 +1068,37 @@ function renderRecords() {
     const keys = Object.keys(d.daily).sort().reverse();
     if (!keys.length) { el.innerHTML = '<div class="rec-empty">記録がありません</div>'; return; }
     el.innerHTML = keys.map(k => {
-      const m = d.daily[k].morning;
-      const preview = m ? (m.value || '') : '';
-      return `<div class="rec-item" onclick="jumpToDaily('${k}')">
-        <div class="rec-item-date">${k}</div>
-        <div class="rec-item-preview">${escHtml(preview)}</div>
-      </div>`;
+      const m = (d.daily[k] && d.daily[k].morning) || {};
+      const titleVal = escHtml(m.title || '');
+      const preview = escHtml(m.value || '');
+      return '<div class="rec-item" data-date="' + escHtml(k) + '">'
+        + '<div class="rec-item-meta">'
+        + '<input class="rec-edit-input date-input" type="date" value="' + escHtml(k) + '">'
+        + '<input class="rec-edit-input title-input" type="text" value="' + titleVal + '" placeholder="タイトル（例: D5 9/12）">'
+        + '<button class="rec-save-btn" data-action="save-daily">保存</button>'
+        + '<button class="rec-open-btn" data-action="open-daily">開く</button>'
+        + '<button class="rec-del-btn" data-action="del-daily" title="削除">🗑</button>'
+        + '</div>'
+        + (preview ? '<div class="rec-preview">' + preview + '</div>' : '')
+        + '</div>';
     }).join('');
   } else {
     const keys = Object.keys(d.weekly).sort().reverse();
     if (!keys.length) { el.innerHTML = '<div class="rec-empty">記録がありません</div>'; return; }
     el.innerHTML = keys.map(k => {
-      const w = d.weekly[k];
-      const preview = w ? ('W' + (w.weekNo || '') + ' ' + (w.title || '')) : '';
-      return `<div class="rec-item" onclick="jumpToWeekly('${k}')">
-        <div class="rec-item-date">${k}（週開始）</div>
-        <div class="rec-item-preview">${escHtml(preview)}</div>
-      </div>`;
+      const w = d.weekly[k] || {};
+      const titleVal = escHtml(w.title || '');
+      const preview = escHtml('W' + (w.weekNo || '') + (w.title ? ' ' + w.title : ''));
+      return '<div class="rec-item" data-ws="' + escHtml(k) + '">'
+        + '<div class="rec-item-meta">'
+        + '<input class="rec-edit-input date-input" type="date" value="' + escHtml(k) + '" title="週内の任意の日付">'
+        + '<input class="rec-edit-input title-input" type="text" value="' + titleVal + '" placeholder="タイトル（例: 糖尿の検査・休みがち）">'
+        + '<button class="rec-save-btn" data-action="save-weekly">保存</button>'
+        + '<button class="rec-open-btn" data-action="open-weekly">開く</button>'
+        + '<button class="rec-del-btn" data-action="del-weekly" title="削除">🗑</button>'
+        + '</div>'
+        + (preview ? '<div class="rec-preview">' + preview + '</div>' : '')
+        + '</div>';
     }).join('');
   }
 }
@@ -1024,6 +1117,39 @@ function jumpToWeekly(ws) {
   renderWeeklyRightPanel(ws);
   switchTab('weekly');
 }
+
+// ─── rec-list event delegation ────────────────────────
+document.getElementById('rec-list').addEventListener('click', function(e) {
+  var btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  var action = btn.dataset.action;
+  var row = btn.closest('.rec-item');
+  if (!row) return;
+
+  if (action === 'save-daily') {
+    var origDate = row.dataset.date;
+    var newDate = row.querySelector('.date-input').value;
+    var newTitle = row.querySelector('.title-input').value;
+    saveRecDaily(origDate, newDate, newTitle);
+  } else if (action === 'open-daily') {
+    var dateStr = row.querySelector('.date-input').value || row.dataset.date;
+    jumpToDaily(dateStr);
+  } else if (action === 'del-daily') {
+    var origDate = row.dataset.date;
+    deleteRecDaily(origDate);
+  } else if (action === 'save-weekly') {
+    var origWs = row.dataset.ws;
+    var newDate = row.querySelector('.date-input').value;
+    var newTitle = row.querySelector('.title-input').value;
+    saveRecWeekly(origWs, newDate, newTitle);
+  } else if (action === 'open-weekly') {
+    var ws = row.dataset.ws;
+    jumpToWeekly(ws);
+  } else if (action === 'del-weekly') {
+    var origWs = row.dataset.ws;
+    deleteRecWeekly(origWs);
+  }
+});
 
 // ─── Tab switching ─────────────────────────────────────
 function switchTab(name) {
@@ -1074,9 +1200,19 @@ document.getElementById('act-url-input').addEventListener('blur', function() {
   localStorage.setItem(URL_KEY, this.value.trim());
 });
 
-// ─── Import ───────────────────────────────────────────
+// ─── Import modal ─────────────────────────────────────
+let importType = 'auto'; // 'auto' | 'daily' | 'weekly'
+
+function setImportType(t) {
+  importType = t;
+  ['auto','daily','weekly'].forEach(id => {
+    document.getElementById('itype-' + id).classList.toggle('active', id === t);
+  });
+}
+
 function openImportModal() {
   document.getElementById('import-textarea').value = '';
+  setImportType('auto');
   document.getElementById('import-modal').classList.add('open');
   setTimeout(() => document.getElementById('import-textarea').focus(), 50);
 }
@@ -1089,24 +1225,51 @@ document.getElementById('import-modal').addEventListener('click', function(e) {
   if (e.target === this) closeImportModal();
 });
 
+// Extract Daily title: "D5 9/12" pattern (D + digits + space + M/D)
+function extractDailyTitle(raw) {
+  const m = raw.match(/D(\d+)\s+(\d{1,2}\/\d{1,2})/);
+  if (m) return m[0].trim();
+  return '';
+}
+
+// Extract Weekly full title: "W3 (9/7～9/12) 糖尿の検査・休みがち"
+function extractWeeklyTitle(raw) {
+  // Match W + digits + space + (M/D～M/D) + optional trailing text
+  const m = raw.match(/W\d+\s*\(\s*\d{1,2}\/\d{1,2}\s*[～~]\s*\d{1,2}\/\d{1,2}\s*\)\s*[^\n]*/);
+  if (m) return m[0].trim();
+  return '';
+}
+
 function executeImport() {
   const raw = document.getElementById('import-textarea').value;
   if (!raw.trim()) { toasts('テキストが空です'); return; }
 
-  // Detect type: Daily has "# Daily Morning", Weekly has "## 1 【事実と観察"
-  const isDaily = /# Daily Morning/i.test(raw);
-  const isWeekly = /##\s*1\s*【事実と観察/.test(raw);
+  // 種別判定: 手動指定 or 自動
+  let forceDaily = importType === 'daily';
+  let forceWeekly = importType === 'weekly';
+  const isDaily = forceDaily || (!forceWeekly && /# Daily Morning/i.test(raw));
+  const isWeekly = forceWeekly || (!forceDaily && /##\s*1\s*【事実と観察/.test(raw));
 
   if (isDaily) {
     const result = importDaily(raw);
-    if (result) { toasts('Daily をインポートしました（' + result + '）'); closeImportModal(); renderRecords(); }
-    else toasts('Daily のパースに失敗しました');
+    if (result) {
+      toasts('Daily をインポートしました（' + result + '）');
+      closeImportModal();
+      renderRecords();
+    } else {
+      toasts('Daily のパースに失敗しました');
+    }
   } else if (isWeekly) {
     const result = importWeekly(raw);
-    if (result) { toasts('Weekly をインポートしました（' + result + '）'); closeImportModal(); renderRecords(); }
-    else toasts('Weekly のパースに失敗しました');
+    if (result) {
+      toasts('Weekly をインポートしました（' + result + '）');
+      closeImportModal();
+      renderRecords();
+    } else {
+      toasts('Weekly のパースに失敗しました');
+    }
   } else {
-    toasts('Daily / Weekly を判別できませんでした');
+    toasts('Daily / Weekly を判別できませんでした（種別を手動選択してみてください）');
   }
 }
 
@@ -1116,100 +1279,97 @@ function pickLine(text, pattern) {
 }
 
 function importDaily(raw) {
-  // Extract date: look for lines like "日付：2026-09-10" or fallback to today
+  // Extract date
   let dateStr = '';
   const dateMatch = raw.match(/日付[：:]\s*(\d{4}-\d{2}-\d{2})/);
   if (dateMatch) {
     dateStr = dateMatch[1];
   } else {
-    // Try to derive from context — fallback to today
     dateStr = today();
   }
 
-  // Weather
+  // Extract Daily title (D5 9/12 形式)
+  const title = extractDailyTitle(raw);
+
   const weather = pickLine(raw, /^天気[：:]\s*(.+)$/m) || '☀';
 
-  // Morning: Value clarification
   const valueM = raw.match(/私は今日は、（([^）]*)）という自分の価値を大切にして生きます。/);
   const value = valueM ? valueM[1].trim() : '';
 
-  // Willing action
   const actionM = raw.match(/私は、（([^）]*)）を\s*（([^）]*)）で、実行します。/);
   const action = actionM ? actionM[1].trim() : '';
   const place = actionM ? actionM[2].trim() : '';
 
-  // Barriers - internal
   const intLine = pickLine(raw, /^internal妖怪（内部）：(.+)$/m);
   const barriersInt = INT_ITEMS.filter(x => intLine.includes(x + '◯') || intLine.includes(x + '○'));
 
-  // Barriers - external
   const extLine = pickLine(raw, /^external妖怪（外部）：(.+)$/m);
   const barriersExt = EXT_ITEMS.filter(x => extLine.includes(x + '◯') || extLine.includes(x + '○'));
 
-  // Micro action main text
   const microM = raw.match(/もし、上記の妖怪がでたら、私は、（([^）]*)）をする。/);
   const microMain = microM ? microM[1].trim() : '';
 
-  // Micro action checkboxes - the line after microMain
   const microLineM = raw.match(/もし、.*?をする。\n([^\n]+)/);
   const microRawLine = microLineM ? microLineM[1] : '';
   const micro = MICRO_ITEMS.filter(x => microRawLine.includes(x + '◯') || microRawLine.includes(x + '○'));
 
-  // Evening: execution level
   const execM = raw.match(/## 1 【Execution level[^】]*】[^\n]*\n(\d+)/);
   const execution = execM ? parseInt(execM[1]) : 0;
 
-  // Observe report
   const observe = OBS_ITEMS.find(x => {
     const escaped = x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return new RegExp('- ' + escaped + '◯').test(raw) || new RegExp('- ' + escaped + '○').test(raw);
   }) || '';
 
-  // Observe note
   const obsNoteM = raw.match(/その他メモ（[^）]*）：\n([\s\S]*?)(?=\n## |\n---|\n# |$)/);
   const observeNote = obsNoteM ? obsNoteM[1].trim() : '';
 
-  // Learning
   const learning = LEARN_ITEMS.filter(x => {
     const escaped = x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return new RegExp('- ' + escaped + '◯').test(raw) || new RegExp('- ' + escaped + '○').test(raw);
   });
 
-  // Learning note (after メモ line in evening section)
   const learnNoteM = raw.match(/## 3 【Learning[\s\S]*?\nメモ\n([\s\S]*?)(?=\n## |\n# |$)/);
   const learningNote = learnNoteM ? learnNoteM[1].trim() : '';
 
-  // Baton
   const batonM = raw.match(/## 4 【明日の自分へのバトン】[^\n]*\n([\s\S]*?)(?=\n## |\n# |$)/);
   const baton = batonM ? batonM[1].trim() : '';
 
   const d = getData();
   if (!d.daily[dateStr]) d.daily[dateStr] = {};
-  d.daily[dateStr].morning = { weather, value, action, place, barriersInt, barriersExt, barriersNote: '', microMain, micro, microNote: '' };
+  d.daily[dateStr].morning = { weather, title, value, action, place, barriersInt, barriersExt, barriersNote: '', microMain, micro, microNote: '' };
   d.daily[dateStr].evening = { execution, observe, observeNote, learning, learningNote, baton };
   setData(d);
   return dateStr;
 }
 
 function importWeekly(raw) {
-  // Parse week start from "W○ (MM/DD～MM/DD)" or use today
+  // Extract full Weekly title string: "W3 (9/7～9/12) 糖尿の検査・休みがち"
+  const fullTitle = extractWeeklyTitle(raw);
+
+  // Parse week start date from header
   let ws = '';
-  const wHeaderM = raw.match(/W\d*\s*\((\d{1,2})\/(\d{1,2})[～~](\d{1,2})\/(\d{1,2})\)/);
+  const wHeaderM = raw.match(/W\d*\s*\(\s*(\d{1,2})\/(\d{1,2})\s*[～~]\s*(\d{1,2})\/(\d{1,2})\s*\)/);
   if (wHeaderM) {
     const year = new Date().getFullYear();
     const sm = parseInt(wHeaderM[1]);
     const sd = parseInt(wHeaderM[2]);
-    const d = new Date(year, sm - 1, sd);
-    ws = d.toISOString().slice(0, 10);
+    const dt = new Date(year, sm - 1, sd);
+    ws = dt.toISOString().slice(0, 10);
   } else {
     ws = weekStart(today());
   }
 
-  // Parse W number and title
+  // Parse W number
   const wNoM = raw.match(/^W(\d+)\s*\(/m);
   const weekNo = wNoM ? wNoM[1] : '';
-  const wTitleM = raw.match(/W\d*\s*\([^)]*\)\s*([^\n]+)/);
-  const title = wTitleM ? wTitleM[1].trim() : '';
+
+  // Title = part after "W3 (9/7～9/12)" — everything after the closing paren on that line
+  let title = '';
+  if (wHeaderM) {
+    const headerLineM = raw.match(/W\d*\s*\([^)]*\)([ \t]*[^\n]*)/);
+    if (headerLineM) title = headerLineM[1].trim();
+  }
 
   // Dates from header
   let startMonth = '', startDay = '', endMonth = '', endDay = '';
@@ -1218,12 +1378,11 @@ function importWeekly(raw) {
     endMonth = wHeaderM[3]; endDay = wHeaderM[4];
   }
 
-  // Daily counts from "朝 ○回 / 夜 ○回"
+  // Daily counts
   const cntM = raw.match(/朝\s*(\d+)回\s*[\/／]\s*夜\s*(\d+)回/);
   const morningCount = cntM ? cntM[1] : '0';
   const eveningCount = cntM ? cntM[2] : '0';
 
-  // Section extractor: grab text between two section headers
   function section(startPat, endPats) {
     const sm = raw.search(startPat);
     if (sm === -1) return '';
@@ -1274,9 +1433,12 @@ function importWeekly(raw) {
   const memo = section(/## 【所感・メモ】/, [/^## /m, /^# /m]);
 
   const d = getData();
-  d.weekly[ws] = { weekNo, startMonth, startDay, endMonth, endDay, title, morningCount, eveningCount,
-    log, worked, notWorked, value5, value3, value1, desiredSelf, theme, mission, habit,
-    priority, mindset, plan, routine, avoid, memo };
+  d.weekly[ws] = {
+    weekNo, startMonth, startDay, endMonth, endDay, title,
+    morningCount, eveningCount, log, worked, notWorked,
+    value5, value3, value1, desiredSelf, theme, mission, habit,
+    priority, mindset, plan, routine, avoid, memo
+  };
   setData(d);
   return ws;
 }
