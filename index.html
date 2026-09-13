@@ -145,6 +145,8 @@ input[type=range] { flex: 1; accent-color: var(--accent); }
   <div class="tab-bar-right">
     <input type="text" id="act-url-input" placeholder="ACTページのURL" value="">
     <button class="btn-url" onclick="openActUrl()">ACTページを開く</button>
+    <button class="btn-url" onclick="exportJson()">バックアップ</button>
+    <label class="btn-url" style="cursor:pointer;">復元<input type="file" accept=".json" style="display:none" onchange="importJson(this)"></label>
   </div>
 </div>
 
@@ -1277,6 +1279,41 @@ function importWeekly(raw) {
     priority, mindset, plan, routine, avoid, memo };
   setData(d);
   return ws;
+}
+
+// ─── Export / Import JSON ─────────────────────────────
+function exportJson() {
+  const data = getData();
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const ts = new Date().toISOString().slice(0, 10);
+  a.download = 'act-journal-backup-' + ts + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toasts('バックアップをダウンロードしました');
+}
+
+function importJson(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!parsed.daily || !parsed.weekly) throw new Error('形式不正');
+      setData(parsed);
+      toasts('復元しました');
+      renderRecords();
+      renderMorningRightPanel();
+    } catch {
+      toasts('JSONの読み込みに失敗しました');
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
 }
 
 // ─── Init ─────────────────────────────────────────────
