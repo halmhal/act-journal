@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACTジャーナリング</title>
+<style>
+:root {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface2: #f0f2f5;
+  --border: #dde1ea;
+  --accent: #4a6cf7;
+  --accent2: #7c5cbf;
+  --text: #1a1d2e;
+  --text-muted: #5a6380;
+  --text-dim: #9aa0b8;
+  --success: #22c55e;
+  --warn: #f59e0b;
+  --radius: 8px;
+  --font: 'Hiragino Sans', 'Yu Gothic UI', 'Meiryo', sans-serif;
+  --mono: 'Courier New', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.6; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+/* Tabs */
+.tab-bar { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.tab-btn { padding: 12px 20px; cursor: pointer; border: none; background: none; color: var(--text-muted); font-family: var(--font); font-size: 13px; font-weight: 500; border-bottom: 2px solid transparent; transition: all .15s; white-space: nowrap; }
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* Layout */
+.tab-content { display: none; flex: 1; overflow: hidden; }
+.tab-content.active { display: flex; }
+.col-left { flex: 1; overflow-y: auto; padding: 20px; }
+.col-right { width: 320px; flex-shrink: 0; border-left: 1px solid var(--border); overflow-y: auto; padding: 16px; background: var(--surface); }
+
+/* Form elements */
+.section { margin-bottom: 24px; }
+.section-label { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: .05em; margin-bottom: 10px; display: block; }
+.q-title { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.5; border-left: 2px solid var(--accent2); padding-left: 8px; }
+.q-hint { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; font-style: italic; }
+textarea { width: 100%; background: #fff; border: 1px solid var(--border); color: var(--text); font-family: var(--font); font-size: 13px; border-radius: var(--radius); padding: 10px; resize: vertical; min-height: 80px; transition: border-color .15s; box-shadow: inset 0 1px 3px rgba(0,0,0,.04); }
+textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(74,108,247,.1); }
+input[type=text], input[type=number] { background: #fff; border: 1px solid var(--border); color: var(--text); font-family: var(--font); font-size: 13px; border-radius: var(--radius); padding: 8px 10px; transition: border-color .15s; box-shadow: inset 0 1px 2px rgba(0,0,0,.04); }
+input[type=text]:focus, input[type=number]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(74,108,247,.1); }
+input[type=date] { background: #fff; border: 1px solid var(--border); color: var(--text); font-family: var(--font); font-size: 13px; border-radius: var(--radius); padding: 8px 10px; }
+input[type=date]:focus { outline: none; border-color: var(--accent); }
+
+/* Inline sentence */
+.inline-sentence { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 13px; color: var(--text-muted); background: #f8f9fc; border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; }
+.inline-sentence input[type=text] { border: none; border-bottom: 1px solid var(--border); border-radius: 0; padding: 2px 6px; background: transparent; flex: 1; min-width: 120px; box-shadow: none; }
+.inline-sentence input[type=text]:focus { border-bottom-color: var(--accent); outline: none; box-shadow: none; }
+
+/* Checkbox / Radio groups */
+.check-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.check-label { display: flex; align-items: center; gap: 5px; cursor: pointer; padding: 5px 10px; background: #fff; border: 1px solid var(--border); border-radius: 20px; font-size: 12px; transition: all .15s; user-select: none; }
+.check-label:hover { border-color: var(--accent2); background: #f5f0ff; }
+.check-label input { display: none; }
+.check-label.checked { background: rgba(74,108,247,.08); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.radio-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.radio-label { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; padding: 8px 12px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; transition: all .15s; }
+.radio-label:hover { border-color: var(--accent2); background: #f8f9fc; }
+.radio-label.checked { background: rgba(74,108,247,.07); border-color: var(--accent); }
+.radio-label input { display: none; }
+
+/* Slider */
+.slider-wrap { display: flex; align-items: center; gap: 12px; }
+input[type=range] { flex: 1; accent-color: var(--accent); }
+.slider-val { font-size: 22px; font-weight: 700; color: var(--accent); min-width: 30px; text-align: center; }
+
+/* Date row */
+.date-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.date-row label { font-size: 12px; color: var(--text-muted); }
+
+/* Weekly header */
+.w-header-row { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+.w-header-row input[type=number] { width: 64px; }
+.w-header-row span { color: var(--text-muted); font-size: 13px; }
+.w-title-input { width: 100%; }
+
+/* Count row */
+.count-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 13px; color: var(--text-muted); }
+.count-row input[type=number] { width: 52px; }
+
+/* Buttons */
+.btn-row { display: flex; gap: 10px; margin-top: 8px; }
+.btn { padding: 9px 20px; border-radius: var(--radius); border: none; cursor: pointer; font-family: var(--font); font-size: 13px; font-weight: 600; transition: all .15s; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #8099ff; }
+.btn-secondary { background: #fff; color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+.btn-success { background: var(--success); color: #000; }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--success); color: #fff; padding: 10px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 600; opacity: 0; transition: opacity .3s; z-index: 100; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+.toast.show { opacity: 1; }
+
+/* Right panel */
+.panel-title { font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: .08em; margin-bottom: 12px; text-transform: uppercase; }
+.panel-text { font-size: 12px; color: var(--text-muted); white-space: pre-wrap; font-family: var(--mono); line-height: 1.7; word-break: break-all; }
+.panel-section { margin-bottom: 16px; }
+.panel-section-head { font-size: 11px; color: var(--accent2); font-weight: 700; margin-bottom: 4px; }
+.panel-item { font-size: 12px; color: var(--text); margin-bottom: 3px; }
+.panel-item-date { font-size: 10px; color: var(--text-dim); margin-left: 6px; }
+.panel-empty { font-size: 12px; color: var(--text-dim); font-style: italic; }
+
+/* Records tab */
+.rec-tab-bar { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.rec-tab-btn { flex: 1; padding: 8px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-family: var(--font); font-size: 13px; }
+.rec-tab-btn.active { background: var(--accent); color: #fff; }
+.rec-list { display: flex; flex-direction: column; gap: 6px; }
+.rec-item { padding: 10px 14px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all .15s; }
+.rec-item:hover { border-color: var(--accent); }
+.rec-item-date { font-size: 13px; font-weight: 600; color: var(--text); }
+.rec-item-preview { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.rec-empty { color: var(--text-dim); font-size: 13px; font-style: italic; }
+.example { font-size: 11px; color: var(--text-dim); margin-top: 4px; font-style: italic; }
+
+/* URL bar in tab-bar (right of 記録一覧 button) */
+.tab-bar-right { display: flex; align-items: center; gap: 6px; margin-left: auto; padding: 0 12px; }
+.tab-bar-right input[type=text] { font-family: var(--font); font-size: 12px; border: 1px solid var(--border); border-radius: var(--radius); padding: 5px 8px; color: var(--text); background: #fff; width: 220px; }
+.tab-bar-right input[type=text]:focus { outline: none; border-color: var(--accent); }
+.tab-bar-right .btn-url { padding: 5px 12px; border-radius: var(--radius); border: 1px solid var(--accent); background: #fff; color: var(--accent); cursor: pointer; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.tab-bar-right .btn-url:hover { background: var(--accent); color: #fff; }
+
+/* Import modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal-box { background: var(--surface); border-radius: 12px; padding: 24px; width: min(640px, 92vw); max-height: 80vh; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
+.modal-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.modal-hint { font-size: 12px; color: var(--text-muted); }
+.modal-box textarea { flex: 1; min-height: 240px; resize: vertical; font-size: 12px; font-family: var(--mono); }
+.modal-btn-row { display: flex; gap: 10px; justify-content: flex-end; }
+</style>
+</head>
+<body>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('morning')">D前半を書く</button>
+  <button class="tab-btn" onclick="switchTab('evening')">D後半を書く</button>
+  <button class="tab-btn" onclick="switchTab('weekly')">Weeklyを書く</button>
+  <button class="tab-btn" onclick="switchTab('records')">記録一覧</button>
+  <div class="tab-bar-right">
+    <input type="text" id="act-url-input" placeholder="ACTページのURL" value="">
+    <button class="btn-url" onclick="openActUrl()">ACTページを開く</button>
+  </div>
+</div>
+
+<!-- Import modal -->
+<div class="modal-overlay" id="import-modal">
+  <div class="modal-box">
+    <div class="modal-title">テキストをインポート</div>
+    <div class="modal-hint">D.txt または W.txt 形式のテキストをそのままペーストしてください。Daily と Weekly を自動判別してインポートします。</div>
+    <textarea id="import-textarea" placeholder="ここにテキストをペースト..."></textarea>
+    <div class="modal-btn-row">
+      <button class="btn btn-secondary" onclick="closeImportModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="executeImport()">インポート</button>
+    </div>
+  </div>
+</div>
+
+<!-- D前半 -->
+<div id="tab-morning" class="tab-content active">
+  <div class="col-left">
+    <div class="date-row">
+      <label>日付</label>
+      <input type="date" id="m-date">
+      <label>天気</label>
+      <input type="text" id="m-weather" style="width:80px" placeholder="☀">
+    </div>
+
+    <div class="section">
+      <div class="q-title">## 1 【Value clarification（価値の明確化）】今日は、どんな価値（あり方）を大切にして生きますか？</div>
+      <div class="inline-sentence">
+        <span>私は今日は、（</span>
+        <input type="text" id="m-value" placeholder="小さな行動・着手したら成功" style="min-width:180px">
+        <span>）という自分の価値を大切にして生きます。</span>
+      </div>
+      <div class="example">記入例：小さな行動・着手したら成功</div>
+    </div>
+
+    <div class="section">
+      <div class="q-title">## 2 【Willing action（価値行動）】 その価値（あり方）を体現する「今日これだけはやる」という「ウィリングな行動やふるまい（自分を前に進める一歩）」は？</div>
+      <div class="q-hint">※「～すること（to do）」という主体的に実践できる行動（動詞）＋タイミングor場所を書く</div>
+      <div class="inline-sentence">
+        <span>私は、（</span>
+        <input type="text" id="m-action" placeholder="タブレットのスタンドを用意する、ACTジャーナリング記入フォームを作成する" style="min-width:200px; flex:2">
+        <span>）を （</span>
+        <input type="text" id="m-place" placeholder="風呂上がり後/自室" style="min-width:120px">
+        <span>）で、実行します。</span>
+      </div>
+      <div class="example">記入例：行動＝タブレットのスタンドを用意する、ACTジャーナリング記入フォームを作成する ／ 場所＝風呂上がり後/自室</div>
+    </div>
+
+    <div class="section">
+      <div class="q-title">## 3 【Possible Barriers（妖怪予測）】 今日、価値行動の完遂を邪魔をしそうな"妖怪"が現れるとすれば、どんな妖怪ですか？</div>
+      <div class="q-hint">※該当するものを選ぶか書き足す</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">internal妖怪（内部）：</div>
+      <div class="check-group" id="m-int-group">
+        <label class="check-label"><input type="checkbox" value="不安">不安</label>
+        <label class="check-label"><input type="checkbox" value="緊張">緊張</label>
+        <label class="check-label"><input type="checkbox" value="面倒">面倒</label>
+        <label class="check-label"><input type="checkbox" value="眠い">眠い</label>
+        <label class="check-label"><input type="checkbox" value="完璧主義">完璧主義</label>
+        <label class="check-label"><input type="checkbox" value="先延ばし思考">先延ばし思考</label>
+        <label class="check-label"><input type="checkbox" value="スマホ誘惑">スマホ誘惑</label>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;margin-top:8px;">external妖怪（外部）：</div>
+      <div class="check-group" id="m-ext-group">
+        <label class="check-label"><input type="checkbox" value="突発トラブル">突発トラブル</label>
+        <label class="check-label"><input type="checkbox" value="急な依頼">急な依頼</label>
+        <label class="check-label"><input type="checkbox" value="時間不足">時間不足</label>
+        <label class="check-label"><input type="checkbox" value="環境問題">環境問題</label>
+      </div>
+      <textarea id="m-barriers-note" placeholder="自由記述（追加の妖怪など）" style="margin-top:8px;min-height:50px;"></textarea>
+      <div class="example">記入例：internal＝面倒、眠い、先延ばし思考 ／ external＝突発トラブル、時間不足</div>
+    </div>
+
+    <div class="section">
+      <div class="q-title">## 4 【Micro action（最小行動）】 その妖怪を「ポケットに入れたまま（連れて）」実行できる最小のアクションは？</div>
+      <div class="q-hint">※該当するものを選ぶか書き足す</div>
+      <div class="inline-sentence" style="margin-bottom:10px;">
+        <span>もし、上記の妖怪がでたら、私は、（</span>
+        <input type="text" id="m-micro-main" placeholder="2分だけ着手、分割する" style="min-width:160px">
+        <span>）をする。</span>
+      </div>
+      <div class="check-group" id="m-micro-group">
+        <label class="check-label"><input type="checkbox" value="2分だけ着手">2分だけ着手</label>
+        <label class="check-label"><input type="checkbox" value="タイマー">タイマー</label>
+        <label class="check-label"><input type="checkbox" value="分割する">分割する</label>
+        <label class="check-label"><input type="checkbox" value="スマホを遠ざける">スマホを遠ざける</label>
+        <label class="check-label"><input type="checkbox" value="NOという">NOという</label>
+        <label class="check-label"><input type="checkbox" value="助けを求める">助けを求める</label>
+        <label class="check-label"><input type="checkbox" value="降伏する">降伏する</label>
+        <label class="check-label"><input type="checkbox" value="正直になる">正直になる</label>
+      </div>
+      <textarea id="m-micro-note" placeholder="自由記述" style="min-height:50px;margin-top:8px;"></textarea>
+      <div class="example">記入例：2分だけ着手、分割する</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveMorning()">D前半を保存</button>
+      <button class="btn btn-secondary" onclick="copyDaily()">Dをコピー</button>
+    </div>
+  </div>
+  <div class="col-right" id="morning-right-panel">
+    <div class="panel-title">最新Weekly参照</div>
+    <div id="morning-weekly-ref" class="panel-text panel-empty">Weeklyがまだ保存されていません</div>
+  </div>
+</div>
+
+<!-- D後半 -->
+<div id="tab-evening" class="tab-content">
+  <div class="col-left">
+    <div class="date-row">
+      <label>日付</label>
+      <input type="date" id="e-date">
+    </div>
+
+    <div class="section">
+      <div class="q-title">## 1 【Execution level（実行度）】 今日の「ウィリングな行動」は、どの程度価値の方向に前進できましたか？（10段階）</div>
+      <div class="slider-wrap">
+        <span style="font-size:12px;color:var(--text-dim)">0</span>
+        <input type="range" id="e-execution" min="0" max="10" value="0" oninput="document.getElementById('e-exec-val').textContent=this.value">
+        <span style="font-size:12px;color:var(--text-dim)">10</span>
+        <span class="slider-val" id="e-exec-val">0</span>
+      </div>
+      <div class="example">記入例：0</div>
+    </div>
+
+    <div class="section">
+      <div class="q-title">## 2 【Observe report（妖怪観察レポート）】 今日、「妖怪（障害）」はどのように現れましたか？</div>
+      <div class="q-hint">※該当するものを選ぶ</div>
+      <div class="radio-group" id="e-observe-group">
+        <label class="radio-label" onclick="selectRadio(this,'e-observe-group')"><input type="radio" name="observe" value="現れなかった">現れなかった</label>
+        <label class="radio-label" onclick="selectRadio(this,'e-observe-group')"><input type="radio" name="observe" value="現れたが、連れて（ポケットに入れて）行動できた">現れたが、連れて（ポケットに入れて）行動できた</label>
+        <label class="radio-label" onclick="selectRadio(this,'e-observe-group')"><input type="radio" name="observe" value="現れて、行動が止まった">現れて、行動が止まった</label>
+        <label class="radio-label" onclick="selectRadio(this,'e-observe-group')"><input type="radio" name="observe" value="予想外の妖怪があらわれた（どんな妖怪？ ）">予想外の妖怪があらわれた（どんな妖怪？ ）</label>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">その他メモ（どんな場面で現れたか？など気づいたこと）：</div>
+      <textarea id="e-observe-note" placeholder="帰宅後。とにかく休みたいし…難しかった" style="min-height:60px;"></textarea>
+      <div class="example">記入例：現れて、行動が止まった ／ メモ：帰宅後。とにかく休みたいし…難しかった</div>
+    </div>
+
+    <div class="section">
+      <div class="q-title">## 3 【Learning（気づき・わかったこと）】</div>
+      <div class="q-hint">※該当するものを選ぶ</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">今日わかったことは、</div>
+      <div class="check-group" id="e-learning-group">
+        <label class="check-label"><input type="checkbox" value="この最小行動は効果があった">この最小行動は効果があった</label>
+        <label class="check-label"><input type="checkbox" value="妖怪予測は当たっていた">妖怪予測は当たっていた</label>
+        <label class="check-label"><input type="checkbox" value="予想外の障害があった">予想外の障害があった</label>
+        <label class="check-label"><input type="checkbox" value="行動のハードルが高すぎた">行動のハードルが高すぎた</label>
+        <label class="check-label"><input type="checkbox" value="環境の影響が大きかった">環境の影響が大きかった</label>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:8px;margin-bottom:4px;">メモ</div>
+      <textarea id="e-learning-note" placeholder="気づいたことのメモ" style="min-height:60px;"></textarea>
+      <div class="example">記入例：妖怪予測は当たっていた、行動のハードルが高すぎた、環境の影響が大きかった</div>
+    </div>
+
+    <div class="section">
+      <div class="q-title">## 4 【明日の自分へのバトン】明日の自分へ、思いやりと好奇心を持って申し送り事項やエールをお願いします。</div>
+      <textarea id="e-baton" placeholder="あまり詰め込みすぎず、ひとつずつこなしていけばよし！" style="min-height:80px;"></textarea>
+      <div class="example">記入例：あまり詰め込みすぎず、ひとつずつこなしていけばよし！</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveEvening()">D後半を保存</button>
+      <button class="btn btn-secondary" onclick="copyDaily()">Dをコピー</button>
+    </div>
+  </div>
+  <div class="col-right">
+    <div class="panel-title">D前半サマリー</div>
+    <div id="evening-morning-ref"></div>
+  </div>
+</div>
+
+<!-- Weekly -->
+<div id="tab-weekly" class="tab-content">
+  <div class="col-left">
+    <div class="date-row">
+      <label>日付（週特定用）</label>
+      <input type="date" id="w-date" onchange="onWeekDateChange()">
+    </div>
+
+    <div class="section">
+      <div class="section-label">週番号・期間・タイトル</div>
+      <div class="w-header-row">
+        <span>W</span>
+        <input type="number" id="w-no" min="1" max="999" placeholder="" style="width:64px">
+        <span>(</span>
+        <input type="number" id="w-sm" min="1" max="12" style="width:56px" placeholder="">
+        <span>/</span>
+        <input type="number" id="w-sd" min="1" max="31" style="width:56px" placeholder="">
+        <span>～</span>
+        <input type="number" id="w-em" min="1" max="12" style="width:56px" placeholder="">
+        <span>/</span>
+        <input type="number" id="w-ed" min="1" max="31" style="width:56px" placeholder="">
+        <span>)</span>
+      </div>
+      <input type="text" id="w-title" class="w-title-input" placeholder="タイトル（例：血糖値）" style="width:100%">
+      <div class="example">記入例：W2 (8/31～9/6)　血糖値</div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Dailyジャーナリング回数</div>
+      <div class="count-row">
+        <span>朝</span>
+        <input type="number" id="w-morning-cnt" min="0" max="99" value="0" style="width:52px">
+        <span>回</span>
+        <span style="margin-left:12px">夜</span>
+        <input type="number" id="w-evening-cnt" min="0" max="99" value="0" style="width:52px">
+        <span>回</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="q-title">## 1 【事実と観察（log）】今週何が起きた？どう感じた？何を学んだ？</div>
+      <textarea id="w-log" placeholder="・血糖値スパイク&#10;→リブレで血糖値を測ったらやはり２００オーバー。やばいって" style="min-height:100px;"></textarea>
+    </div>
+
+    <div class="section">
+      <div class="q-title">## 2 【実験判断】来週以降どうする？</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">うまくいったこととその理由</div>
+      <textarea id="w-worked" placeholder="・リブレ測定&#10;リブレで血糖値を測って現状を把握できた。" style="min-height:70px;"></textarea>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:10px;margin-bottom:4px;">うまくいかなかったこととその理由</div>
+      <textarea id="w-not-worked" placeholder="・早起き一旦休止&#10;→睡眠の専門家じゃない人の早起きの方法を参照したせいで睡眠がうまくいかない" style="min-height:70px;"></textarea>
+    </div>
+
+    <div class="section">
+      <div class="q-title">## 3 【方向づけ（Value）】本当はどうなりたい？（人生から得たいこと・ありたい姿・人生の方向性）</div>
+      <div class="q-hint">※毎週見返して微調整</div>
+      <div style="font-size:12px;color:var(--accent2);margin-bottom:8px;">【得たいこと】</div>
+      <div class="inline-sentence" style="margin-bottom:8px;">
+        <span style="white-space:nowrap">・5年後の私は、</span>
+        <input type="text" id="w-v5" placeholder="連載して精神面もさらに安定して自分が進むべき方向を明確にしている、自分で自由に意思決定できる立場になっている" style="min-width:200px;flex:1">
+      </div>
+      <div class="inline-sentence" style="margin-bottom:8px;">
+        <span style="white-space:nowrap">・3年後の私は、</span>
+        <input type="text" id="w-v3" placeholder="臆せず創作して作品を量産している" style="min-width:200px;flex:1">
+      </div>
+      <div class="inline-sentence" style="margin-bottom:8px;">
+        <span style="white-space:nowrap">・1年後の私は、</span>
+        <input type="text" id="w-v1" placeholder="質よりも量を確保して創作でアウトプットする機会を増やしている" style="min-width:200px;flex:1">
+      </div>
+      <div style="font-size:12px;color:var(--accent2);margin:10px 0 6px;">【ありたい姿】※できれば5つ以上</div>
+      <textarea id="w-desired" placeholder="・現実を確認して現実に則した行動をとれる自分&#10;・完璧主義と先延ばしグセに惑わされない自分" style="min-height:90px;"></textarea>
+      <div style="font-size:12px;color:var(--accent2);margin:10px 0 6px;">【2026年のテーマ（それを放っておくと「なりたい姿・価値観」の優先順位が下がるもの）】</div>
+      <textarea id="w-theme" placeholder="・完璧主義・先延ばしグセを克服してとりあえず着手する" style="min-height:60px;"></textarea>
+      <div style="font-size:12px;color:var(--accent2);margin:10px 0 6px;">【ミッション（内発的かつ利他的なもの）】</div>
+      <textarea id="w-mission" placeholder="・他人にも背景があることを意識する" style="min-height:50px;"></textarea>
+      <div style="font-size:12px;color:var(--accent2);margin:10px 0 6px;">【定着させたい習慣（健康的なもの）】</div>
+      <textarea id="w-habit" placeholder="・血糖の上昇を緩やかにする食品・食べ方を実践する、脂質糖質を適量にする" style="min-height:60px;"></textarea>
+    </div>
+
+    <div class="section">
+      <div class="q-title">## 4 【優先順位（Priority）】特に優先する価値あるゴール　1~2つまで</div>
+      <textarea id="w-priority" placeholder="・ネームを完成させる&#10;・血糖値スパイク、インスリン抵抗性を改善させる" style="min-height:70px;"></textarea>
+    </div>
+
+    <div class="section">
+      <div class="q-title">## 5 【心得（Mind set）】上記のゴールを達成する過程で、"招かれざる客（妖怪）"が現れた時の心得</div>
+      <textarea id="w-mindset" placeholder="その不快さは、真の学習のサインであり、&#10;自分が人生から欲しいもの（価値）のために、&#10;その不快感は、「殺しには来ないただの感情」だと知り、（本当にそうだ...！）&#10;逃げる方が、中長期的には割に合わないと気づく。" style="min-height:100px;"></textarea>
+    </div>
+
+    <div class="section">
+      <div class="q-title">## 6 【計画（Plan）】来週何をする？</div>
+      <textarea id="w-plan" placeholder="・血糖の上昇を緩やかにする食品・食べ方を実践する&#10;・肝臓・血糖値の本を読んでみる" style="min-height:90px;"></textarea>
+    </div>
+
+    <div class="section">
+      <div class="q-title">## 【自分マニュアル】</div>
+      <div class="q-hint">※自分という器をよりよく機能させるためのルール（時間、環境、手段、仕組み）</div>
+      <div style="font-size:12px;color:var(--accent2);margin-bottom:6px;">▼守るルーティン</div>
+      <textarea id="w-routine" placeholder="・22:15までには布団に入る。&#10;・朝食後と夕飯後のスキマ時間にCBTワークやる（最低でも週1回）" style="min-height:70px;"></textarea>
+      <div style="font-size:12px;color:var(--accent2);margin:10px 0 6px;">▼やらないことリスト</div>
+      <textarea id="w-avoid" placeholder="・早寝して睡眠のバランスをくずす（逆に睡眠が浅くなるから）&#10;・無理やり早起きする（まずは睡眠負債の返済と十分な量を確保する）" style="min-height:70px;"></textarea>
+    </div>
+
+    <div class="section">
+      <div class="q-title">## 【所感・メモ】</div>
+      <textarea id="w-memo" placeholder="進捗管理するためにプロジェクトノートに適宜加筆する" style="min-height:60px;"></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveWeekly()">Weeklyを保存</button>
+      <button class="btn btn-secondary" onclick="copyWeekly()">Weeklyをコピー</button>
+    </div>
+  </div>
+  <div class="col-right">
+    <div class="panel-title">この週のDaily集計</div>
+    <div id="weekly-daily-ref"></div>
+  </div>
+</div>
+
+<!-- Records -->
+<div id="tab-records" class="tab-content">
+  <div class="col-left" style="max-width:700px;">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+      <div class="rec-tab-bar" style="margin-bottom:0; flex:1;">
+        <button class="rec-tab-btn active" id="rec-d-btn" onclick="switchRecTab('daily')">Daily</button>
+        <button class="rec-tab-btn" id="rec-w-btn" onclick="switchRecTab('weekly')">Weekly</button>
+      </div>
+      <button class="btn btn-secondary" onclick="openImportModal()" style="white-space:nowrap; flex-shrink:0;">テキストをインポート</button>
+    </div>
+    <div id="rec-list" class="rec-list"></div>
+  </div>
+  <div class="col-right" style="display:none"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORE_KEY = 'actJ.v1';
+
+function getData() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || { daily: {}, weekly: {} }; }
+  catch { return { daily: {}, weekly: {} }; }
+}
+function setData(d) { localStorage.setItem(STORE_KEY, JSON.stringify(d)); }
+
+function today() {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
+
+function weekStart(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  const mon = new Date(d);
+  mon.setDate(d.getDate() + diff);
+  return mon.toISOString().slice(0, 10);
+}
+
+function toasts(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function toggleCheck(lbl) {
+  lbl.classList.toggle('checked');
+  lbl.querySelector('input').checked = lbl.classList.contains('checked');
+}
+
+function initCheckGroups() {
+  document.querySelectorAll('.check-group .check-label').forEach(lbl => {
+    lbl.removeAttribute('onclick');
+    const inp = lbl.querySelector('input');
+    inp.addEventListener('change', function() {
+      lbl.classList.toggle('checked', inp.checked);
+    });
+    lbl.addEventListener('click', function(e) {
+      if (e.target === inp) return;
+      e.preventDefault();
+      inp.checked = !inp.checked;
+      inp.dispatchEvent(new Event('change'));
+    });
+  });
+}
+
+function selectRadio(lbl, groupId) {
+  document.querySelectorAll('#' + groupId + ' .radio-label').forEach(l => l.classList.remove('checked'));
+  lbl.classList.add('checked');
+  lbl.querySelector('input').checked = true;
+}
+
+function getChecked(groupId) {
+  const res = [];
+  document.querySelectorAll('#' + groupId + ' .check-label.checked input').forEach(i => res.push(i.value));
+  return res;
+}
+
+function setChecked(groupId, values) {
+  document.querySelectorAll('#' + groupId + ' .check-label').forEach(lbl => {
+    const v = lbl.querySelector('input').value;
+    const on = values && values.includes(v);
+    lbl.classList.toggle('checked', on);
+    lbl.querySelector('input').checked = on;
+  });
+}
+
+function getRadio(groupId) {
+  const el = document.querySelector('#' + groupId + ' .radio-label.checked input');
+  return el ? el.value : '';
+}
+
+function setRadio(groupId, value) {
+  document.querySelectorAll('#' + groupId + ' .radio-label').forEach(lbl => {
+    const v = lbl.querySelector('input').value;
+    const on = v === value;
+    lbl.classList.toggle('checked', on);
+    lbl.querySelector('input').checked = on;
+  });
+}
+
+function checkboxLine(items, selected, sep) {
+  return items.map(item => selected.includes(item) ? item + '◯' : item).join(sep || ' / ');
+}
+
+// ─── Morning ─────────────────────────────────────────
+function initMorningDate() {
+  const el = document.getElementById('m-date');
+  if (!el.value) el.value = today();
+}
+
+function loadMorning(dateStr) {
+  const d = getData();
+  const rec = (d.daily[dateStr] && d.daily[dateStr].morning) || {};
+  document.getElementById('m-weather').value = rec.weather || '☀';
+  document.getElementById('m-value').value = rec.value || '';
+  document.getElementById('m-action').value = rec.action || '';
+  document.getElementById('m-place').value = rec.place || '';
+  setChecked('m-int-group', rec.barriersInt || []);
+  setChecked('m-ext-group', rec.barriersExt || []);
+  document.getElementById('m-barriers-note').value = rec.barriersNote || '';
+  document.getElementById('m-micro-main').value = rec.microMain || '';
+  setChecked('m-micro-group', rec.micro || []);
+  document.getElementById('m-micro-note').value = rec.microNote || '';
+}
+
+function saveMorning() {
+  const dateStr = document.getElementById('m-date').value || today();
+  const d = getData();
+  if (!d.daily[dateStr]) d.daily[dateStr] = {};
+  d.daily[dateStr].morning = {
+    weather: document.getElementById('m-weather').value || '☀',
+    value: document.getElementById('m-value').value,
+    action: document.getElementById('m-action').value,
+    place: document.getElementById('m-place').value,
+    barriersInt: getChecked('m-int-group'),
+    barriersExt: getChecked('m-ext-group'),
+    barriersNote: document.getElementById('m-barriers-note').value,
+    microMain: document.getElementById('m-micro-main').value,
+    micro: getChecked('m-micro-group'),
+    microNote: document.getElementById('m-micro-note').value
+  };
+  setData(d);
+  toasts('D前半を保存しました');
+  renderMorningRightPanel();
+}
+
+// ─── Evening ─────────────────────────────────────────
+function initEveningDate() {
+  const el = document.getElementById('e-date');
+  if (!el.value) el.value = today();
+}
+
+function loadEvening(dateStr) {
+  const d = getData();
+  const rec = (d.daily[dateStr] && d.daily[dateStr].evening) || {};
+  const exec = rec.execution !== undefined ? rec.execution : 0;
+  document.getElementById('e-execution').value = exec;
+  document.getElementById('e-exec-val').textContent = exec;
+  setRadio('e-observe-group', rec.observe || '');
+  document.getElementById('e-observe-note').value = rec.observeNote || '';
+  setChecked('e-learning-group', rec.learning || []);
+  document.getElementById('e-learning-note').value = rec.learningNote || '';
+  document.getElementById('e-baton').value = rec.baton || '';
+  renderEveningRightPanel(dateStr);
+}
+
+function saveEvening() {
+  const dateStr = document.getElementById('e-date').value || today();
+  const d = getData();
+  if (!d.daily[dateStr]) d.daily[dateStr] = {};
+  d.daily[dateStr].evening = {
+    execution: parseInt(document.getElementById('e-execution').value),
+    observe: getRadio('e-observe-group'),
+    observeNote: document.getElementById('e-observe-note').value,
+    learning: getChecked('e-learning-group'),
+    learningNote: document.getElementById('e-learning-note').value,
+    baton: document.getElementById('e-baton').value
+  };
+  setData(d);
+  toasts('D後半を保存しました');
+}
+
+// ─── Weekly ───────────────────────────────────────────
+function initWeeklyDate() {
+  const el = document.getElementById('w-date');
+  if (!el.value) {
+    el.value = today();
+    onWeekDateChange();
+  }
+}
+
+function onWeekDateChange() {
+  const dateStr = document.getElementById('w-date').value;
+  if (!dateStr) return;
+  const ws = weekStart(dateStr);
+  const wsDate = new Date(ws + 'T00:00:00');
+  const weDate = new Date(wsDate);
+  weDate.setDate(wsDate.getDate() + 6);
+  document.getElementById('w-sm').value = wsDate.getMonth() + 1;
+  document.getElementById('w-sd').value = wsDate.getDate();
+  document.getElementById('w-em').value = weDate.getMonth() + 1;
+  document.getElementById('w-ed').value = weDate.getDate();
+  loadWeekly(ws);
+  renderWeeklyRightPanel(ws);
+}
+
+function loadWeekly(ws) {
+  const d = getData();
+  const rec = d.weekly[ws] || {};
+  document.getElementById('w-no').value = rec.weekNo || '';
+  document.getElementById('w-sm').value = rec.startMonth || document.getElementById('w-sm').value;
+  document.getElementById('w-sd').value = rec.startDay || document.getElementById('w-sd').value;
+  document.getElementById('w-em').value = rec.endMonth || document.getElementById('w-em').value;
+  document.getElementById('w-ed').value = rec.endDay || document.getElementById('w-ed').value;
+  document.getElementById('w-title').value = rec.title || '';
+  document.getElementById('w-morning-cnt').value = rec.morningCount || 0;
+  document.getElementById('w-evening-cnt').value = rec.eveningCount || 0;
+  document.getElementById('w-log').value = rec.log || '';
+  document.getElementById('w-worked').value = rec.worked || '';
+  document.getElementById('w-not-worked').value = rec.notWorked || '';
+  document.getElementById('w-v5').value = rec.value5 || '';
+  document.getElementById('w-v3').value = rec.value3 || '';
+  document.getElementById('w-v1').value = rec.value1 || '';
+  document.getElementById('w-desired').value = rec.desiredSelf || '';
+  document.getElementById('w-theme').value = rec.theme || '';
+  document.getElementById('w-mission').value = rec.mission || '';
+  document.getElementById('w-habit').value = rec.habit || '';
+  document.getElementById('w-priority').value = rec.priority || '';
+  document.getElementById('w-mindset').value = rec.mindset || '';
+  document.getElementById('w-plan').value = rec.plan || '';
+  document.getElementById('w-routine').value = rec.routine || '';
+  document.getElementById('w-avoid').value = rec.avoid || '';
+  document.getElementById('w-memo').value = rec.memo || '';
+}
+
+function saveWeekly() {
+  const dateStr = document.getElementById('w-date').value || today();
+  const ws = weekStart(dateStr);
+  const d = getData();
+  d.weekly[ws] = {
+    weekNo: document.getElementById('w-no').value,
+    startMonth: document.getElementById('w-sm').value,
+    startDay: document.getElementById('w-sd').value,
+    endMonth: document.getElementById('w-em').value,
+    endDay: document.getElementById('w-ed').value,
+    title: document.getElementById('w-title').value,
+    morningCount: document.getElementById('w-morning-cnt').value,
+    eveningCount: document.getElementById('w-evening-cnt').value,
+    log: document.getElementById('w-log').value,
+    worked: document.getElementById('w-worked').value,
+    notWorked: document.getElementById('w-not-worked').value,
+    value5: document.getElementById('w-v5').value,
+    value3: document.getElementById('w-v3').value,
+    value1: document.getElementById('w-v1').value,
+    desiredSelf: document.getElementById('w-desired').value,
+    theme: document.getElementById('w-theme').value,
+    mission: document.getElementById('w-mission').value,
+    habit: document.getElementById('w-habit').value,
+    priority: document.getElementById('w-priority').value,
+    mindset: document.getElementById('w-mindset').value,
+    plan: document.getElementById('w-plan').value,
+    routine: document.getElementById('w-routine').value,
+    avoid: document.getElementById('w-avoid').value,
+    memo: document.getElementById('w-memo').value
+  };
+  setData(d);
+  toasts('Weeklyを保存しました');
+  renderMorningRightPanel();
+}
+
+// ─── Copy ─────────────────────────────────────────────
+const INT_ITEMS = ['不安','緊張','面倒','眠い','完璧主義','先延ばし思考','スマホ誘惑'];
+const EXT_ITEMS = ['突発トラブル','急な依頼','時間不足','環境問題'];
+const MICRO_ITEMS = ['2分だけ着手','タイマー','分割する','スマホを遠ざける','NOという','助けを求める','降伏する','正直になる'];
+const OBS_ITEMS = ['現れなかった','現れたが、連れて（ポケットに入れて）行動できた','現れて、行動が止まった','予想外の妖怪があらわれた（どんな妖怪？ ）'];
+const LEARN_ITEMS = ['この最小行動は効果があった','妖怪予測は当たっていた','予想外の障害があった','行動のハードルが高すぎた','環境の影響が大きかった'];
+
+function buildDailyText(dateStr) {
+  const d = getData();
+  const m = (d.daily[dateStr] && d.daily[dateStr].morning) || {};
+  const e = (d.daily[dateStr] && d.daily[dateStr].evening) || {};
+  const intLine = INT_ITEMS.map(x => m.barriersInt && m.barriersInt.includes(x) ? x + '◯' : x).join(' / ');
+  const extLine = EXT_ITEMS.map(x => m.barriersExt && m.barriersExt.includes(x) ? x + '◯' : x).join(' / ');
+  const microLine = MICRO_ITEMS.map(x => m.micro && m.micro.includes(x) ? x + '◯' : x).join(' / ');
+  const obsLines = OBS_ITEMS.map(x => '- ' + x + (e.observe === x ? '◯' : '')).join('\n');
+  const learnLines = LEARN_ITEMS.map(x => '- ' + x + (e.learning && e.learning.includes(x) ? '◯' : '')).join('\n');
+
+  return `天気：${m.weather || '☀'}
+
+# Daily Morning
+
+（所要時間：3分 ／ 記入タイミング：前日夜 ～ 当日起床後3時間以内までに）
+
+## 1 【Value clarification（価値の明確化）】今日は、どんな価値（あり方）を大切にして生きますか？
+
+<!-- ここからタイムラインに表示 -->
+
+私は今日は、（ ${m.value || ''}）という自分の価値を大切にして生きます。
+
+## 2 【Willing action（価値行動）】 その価値（あり方）を体現する「今日これだけはやる」という「ウィリングな行動やふるまい（自分を前に進める一歩）」は？
+
+※「～すること（to do）」という主体的に実践できる行動（動詞）＋タイミングor場所を書く
+私は、（ ${m.action || ''}）を （${m.place || ''}）で、実行します。
+
+## 3 【Possible Barriers（妖怪予測）】 今日、価値行動の完遂を邪魔をしそうな"妖怪"が現れるとすれば、どんな妖怪ですか？
+
+※該当するものを選ぶか書き足す
+internal妖怪（内部）：${intLine}
+external妖怪（外部）：${extLine}
+
+## 4 【Micro action（最小行動）】 その妖怪を「ポケットに入れたまま（連れて）」実行できる最小のアクションは？
+
+※該当するものを選ぶか書き足す
+もし、上記の妖怪がでたら、私は、（ ${m.microMain || ''}）をする。
+${microLine}
+
+---
+
+# Daily Evening
+
+（所要時間：3分 ／ 記入：その日の夕方 ～ 翌日起床後3時間以内）
+
+## 1 【Execution level（実行度）】 今日の「ウィリングな行動」は、どの程度価値の方向に前進できましたか？（10段階）
+${e.execution !== undefined ? e.execution : ''}
+
+## 2 【Observe report（妖怪観察レポート）】 今日、「妖怪（障害）」はどのように現れましたか？
+
+※該当するものを選ぶ
+
+${obsLines}
+
+その他メモ（どんな場面で現れたか？など気づいたこと）：
+${e.observeNote || ''}
+
+## 3 【Learning（気づき・わかったこと）】
+
+※該当するものを選ぶ
+今日わかったことは、
+
+${learnLines}
+
+メモ
+${e.learningNote || ''}
+
+## 4 【明日の自分へのバトン】明日の自分へ、思いやりと好奇心を持って申し送り事項やエールをお願いします。
+${e.baton || ''}`;
+}
+
+function buildWeeklyText(ws) {
+  const d = getData();
+  const w = d.weekly[ws] || {};
+  return `W${w.weekNo || ''} (${w.startMonth || ''}/${w.startDay || ''}～${w.endMonth || ''}/${w.endDay || ''})　${w.title || ''}
+
+## 1 【事実と観察（log）】今週何が起きた？どう感じた？何を学んだ？
+
+<!-- ここからタイムラインに表示 -->
+
+・Dailyジャーナリング（朝 ${w.morningCount || '0'}回 / 夜 ${w.eveningCount || '0'}回）
+${w.log || ''}
+
+## 2 【実験判断】来週以降どうする？
+
+うまくいったこととその理由
+${w.worked || ''}
+
+うまくいかなかったこととその理由
+${w.notWorked || ''}
+
+## 3 【方向づけ（Value）】本当はどうなりたい？（人生から得たいこと・ありたい姿・人生の方向性）
+
+※毎週見返して微調整
+
+【得たいこと】
+・5年後の私は、${w.value5 || ''}
+・3年後の私は、${w.value3 || ''}
+・1年後の私は、${w.value1 || ''}
+
+【ありたい姿】※できれば5つ以上
+${w.desiredSelf || ''}
+
+【2026年のテーマ（それを放っておくと「なりたい姿・価値観」の優先順位が下がるもの）】
+${w.theme || ''}
+
+【ミッション（内発的かつ利他的なもの）】
+${w.mission || ''}
+
+【定着させたい習慣（健康的なもの）】
+${w.habit || ''}
+
+## 4 【優先順位（Priority）】特に優先する価値あるゴール　1~2つまで
+${w.priority || ''}
+
+## 5 【心得（Mind set）】上記のゴールを達成する過程で、"招かれざる客（妖怪）"が現れた時の心得
+
+${w.mindset || ''}
+
+## 6 【計画（Plan）】来週何をする？
+${w.plan || ''}
+
+## 【自分マニュアル】
+
+※自分という器をよりよく機能させるためのルール（時間、環境、手段、仕組み）
+
+▼守るルーティン
+${w.routine || ''}
+
+▼やらないことリスト
+${w.avoid || ''}
+
+## 【所感・メモ】
+${w.memo || ''}`;
+}
+
+function copyToClipboard(text, label) {
+  function fallback() {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.top = '-9999px';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      document.execCommand('copy');
+      toasts(label + 'をコピーしました');
+    } catch {
+      toasts('コピー失敗');
+    }
+    document.body.removeChild(ta);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      () => toasts(label + 'をコピーしました'),
+      () => fallback()
+    );
+  } else {
+    fallback();
+  }
+}
+
+function copyDaily() {
+  const dateStr = (document.getElementById('m-date') && document.getElementById('m-date').value)
+    || (document.getElementById('e-date') && document.getElementById('e-date').value)
+    || today();
+  copyToClipboard(buildDailyText(dateStr), 'D');
+}
+
+function copyWeekly() {
+  const dateStr = document.getElementById('w-date').value || today();
+  const ws = weekStart(dateStr);
+  copyToClipboard(buildWeeklyText(ws), 'Weekly');
+}
+
+// ─── Right panels ─────────────────────────────────────
+function renderMorningRightPanel() {
+  const d = getData();
+  const keys = Object.keys(d.weekly).sort().reverse();
+  const el = document.getElementById('morning-weekly-ref');
+  if (!keys.length) { el.className = 'panel-text panel-empty'; el.textContent = 'Weeklyがまだ保存されていません'; return; }
+  el.className = 'panel-text';
+  el.textContent = buildWeeklyText(keys[0]);
+}
+
+function renderEveningRightPanel(dateStr) {
+  const d = getData();
+  const m = (d.daily[dateStr] && d.daily[dateStr].morning) || {};
+  const el = document.getElementById('evening-morning-ref');
+  if (!Object.keys(m).length) { el.innerHTML = '<div class="panel-empty">D前半がまだ保存されていません</div>'; return; }
+  const intSel = (m.barriersInt || []).map(x => x + '◯').join(' ');
+  const extSel = (m.barriersExt || []).map(x => x + '◯').join(' ');
+  el.innerHTML = `
+    <div class="panel-section">
+      <div class="panel-section-head">価値</div>
+      <div class="panel-item">${escHtml(m.value || '（未記入）')}</div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-head">行動</div>
+      <div class="panel-item">${escHtml(m.action || '（未記入）')} ／ ${escHtml(m.place || '')}</div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-head">妖怪（内）</div>
+      <div class="panel-item">${escHtml(intSel || '（なし）')}</div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-head">妖怪（外）</div>
+      <div class="panel-item">${escHtml(extSel || '（なし）')}</div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-head">最小行動</div>
+      <div class="panel-item">${escHtml(m.microMain || '（未記入）')}</div>
+    </div>
+  `;
+}
+
+function renderWeeklyRightPanel(ws) {
+  const d = getData();
+  const wsDate = new Date(ws + 'T00:00:00');
+  const weDate = new Date(wsDate);
+  weDate.setDate(wsDate.getDate() + 6);
+  const el = document.getElementById('weekly-daily-ref');
+  const days = [];
+  for (let i = 0; i <= 6; i++) {
+    const dd = new Date(wsDate);
+    dd.setDate(wsDate.getDate() + i);
+    days.push(dd.toISOString().slice(0, 10));
+  }
+  const sections = [
+    { key: 'morning', label: '価値', field: r => r.value || '' },
+    { key: 'morning', label: '行動', field: r => r.action ? r.action + '（' + (r.place || '') + '）' : '' },
+    { key: 'evening', label: '実行度', field: r => r.execution !== undefined ? r.execution + '/10' : '' },
+    { key: 'evening', label: 'バトン', field: r => r.baton || '' }
+  ];
+  let html = '';
+  sections.forEach(sec => {
+    let rows = '';
+    days.forEach(day => {
+      const rec = d.daily[day] && d.daily[day][sec.key];
+      if (!rec) return;
+      const val = sec.field(rec);
+      if (!val) return;
+      rows += `<div class="panel-item">${day.slice(5)} <span class="panel-item-date"></span>${escHtml(val)}</div>`;
+    });
+    if (rows) html += `<div class="panel-section"><div class="panel-section-head">${sec.label}</div>${rows}</div>`;
+  });
+  el.innerHTML = html || '<div class="panel-empty">この週のDailyがまだ保存されていません</div>';
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─── Records ──────────────────────────────────────────
+let recMode = 'daily';
+
+function switchRecTab(mode) {
+  recMode = mode;
+  document.getElementById('rec-d-btn').classList.toggle('active', mode === 'daily');
+  document.getElementById('rec-w-btn').classList.toggle('active', mode === 'weekly');
+  renderRecords();
+}
+
+function renderRecords() {
+  const d = getData();
+  const el = document.getElementById('rec-list');
+  if (recMode === 'daily') {
+    const keys = Object.keys(d.daily).sort().reverse();
+    if (!keys.length) { el.innerHTML = '<div class="rec-empty">記録がありません</div>'; return; }
+    el.innerHTML = keys.map(k => {
+      const m = d.daily[k].morning;
+      const preview = m ? (m.value || '') : '';
+      return `<div class="rec-item" onclick="jumpToDaily('${k}')">
+        <div class="rec-item-date">${k}</div>
+        <div class="rec-item-preview">${escHtml(preview)}</div>
+      </div>`;
+    }).join('');
+  } else {
+    const keys = Object.keys(d.weekly).sort().reverse();
+    if (!keys.length) { el.innerHTML = '<div class="rec-empty">記録がありません</div>'; return; }
+    el.innerHTML = keys.map(k => {
+      const w = d.weekly[k];
+      const preview = w ? ('W' + (w.weekNo || '') + ' ' + (w.title || '')) : '';
+      return `<div class="rec-item" onclick="jumpToWeekly('${k}')">
+        <div class="rec-item-date">${k}（週開始）</div>
+        <div class="rec-item-preview">${escHtml(preview)}</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function jumpToDaily(dateStr) {
+  document.getElementById('m-date').value = dateStr;
+  loadMorning(dateStr);
+  document.getElementById('e-date').value = dateStr;
+  loadEvening(dateStr);
+  switchTab('morning');
+}
+
+function jumpToWeekly(ws) {
+  document.getElementById('w-date').value = ws;
+  loadWeekly(ws);
+  renderWeeklyRightPanel(ws);
+  switchTab('weekly');
+}
+
+// ─── Tab switching ─────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', ['morning','evening','weekly','records'][i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'records') renderRecords();
+  if (name === 'morning') {
+    const dateStr = document.getElementById('m-date').value || today();
+    loadMorning(dateStr);
+    renderMorningRightPanel();
+  }
+  if (name === 'evening') {
+    const dateStr = document.getElementById('e-date').value || today();
+    loadEvening(dateStr);
+  }
+  if (name === 'weekly') {
+    const dateStr = document.getElementById('w-date').value || today();
+    const ws = weekStart(dateStr);
+    renderWeeklyRightPanel(ws);
+  }
+}
+
+// date change handlers
+document.getElementById('m-date').addEventListener('change', e => { loadMorning(e.target.value); renderMorningRightPanel(); });
+document.getElementById('e-date').addEventListener('change', e => { loadEvening(e.target.value); });
+
+// ─── ACT URL ──────────────────────────────────────────
+const URL_KEY = 'actJ.url';
+
+function openActUrl() {
+  const url = document.getElementById('act-url-input').value.trim();
+  if (!url) { toasts('URLを入力してください'); return; }
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
+(function initUrl() {
+  const saved = localStorage.getItem(URL_KEY);
+  if (saved) document.getElementById('act-url-input').value = saved;
+})();
+
+document.getElementById('act-url-input').addEventListener('change', function() {
+  localStorage.setItem(URL_KEY, this.value.trim());
+});
+document.getElementById('act-url-input').addEventListener('blur', function() {
+  localStorage.setItem(URL_KEY, this.value.trim());
+});
+
+// ─── Import ───────────────────────────────────────────
+function openImportModal() {
+  document.getElementById('import-textarea').value = '';
+  document.getElementById('import-modal').classList.add('open');
+  setTimeout(() => document.getElementById('import-textarea').focus(), 50);
+}
+
+function closeImportModal() {
+  document.getElementById('import-modal').classList.remove('open');
+}
+
+document.getElementById('import-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeImportModal();
+});
+
+function executeImport() {
+  const raw = document.getElementById('import-textarea').value;
+  if (!raw.trim()) { toasts('テキストが空です'); return; }
+
+  // Detect type: Daily has "# Daily Morning", Weekly has "## 1 【事実と観察"
+  const isDaily = /# Daily Morning/i.test(raw);
+  const isWeekly = /##\s*1\s*【事実と観察/.test(raw);
+
+  if (isDaily) {
+    const result = importDaily(raw);
+    if (result) { toasts('Daily をインポートしました（' + result + '）'); closeImportModal(); renderRecords(); }
+    else toasts('Daily のパースに失敗しました');
+  } else if (isWeekly) {
+    const result = importWeekly(raw);
+    if (result) { toasts('Weekly をインポートしました（' + result + '）'); closeImportModal(); renderRecords(); }
+    else toasts('Weekly のパースに失敗しました');
+  } else {
+    toasts('Daily / Weekly を判別できませんでした');
+  }
+}
+
+function pickLine(text, pattern) {
+  const m = text.match(pattern);
+  return m ? m[1].trim() : '';
+}
+
+function importDaily(raw) {
+  // Extract date: look for lines like "日付：2026-09-10" or fallback to today
+  let dateStr = '';
+  const dateMatch = raw.match(/日付[：:]\s*(\d{4}-\d{2}-\d{2})/);
+  if (dateMatch) {
+    dateStr = dateMatch[1];
+  } else {
+    // Try to derive from context — fallback to today
+    dateStr = today();
+  }
+
+  // Weather
+  const weather = pickLine(raw, /^天気[：:]\s*(.+)$/m) || '☀';
+
+  // Morning: Value clarification
+  const valueM = raw.match(/私は今日は、（([^）]*)）という自分の価値を大切にして生きます。/);
+  const value = valueM ? valueM[1].trim() : '';
+
+  // Willing action
+  const actionM = raw.match(/私は、（([^）]*)）を\s*（([^）]*)）で、実行します。/);
+  const action = actionM ? actionM[1].trim() : '';
+  const place = actionM ? actionM[2].trim() : '';
+
+  // Barriers - internal
+  const intLine = pickLine(raw, /^internal妖怪（内部）：(.+)$/m);
+  const barriersInt = INT_ITEMS.filter(x => intLine.includes(x + '◯') || intLine.includes(x + '○'));
+
+  // Barriers - external
+  const extLine = pickLine(raw, /^external妖怪（外部）：(.+)$/m);
+  const barriersExt = EXT_ITEMS.filter(x => extLine.includes(x + '◯') || extLine.includes(x + '○'));
+
+  // Micro action main text
+  const microM = raw.match(/もし、上記の妖怪がでたら、私は、（([^）]*)）をする。/);
+  const microMain = microM ? microM[1].trim() : '';
+
+  // Micro action checkboxes - the line after microMain
+  const microLineM = raw.match(/もし、.*?をする。\n([^\n]+)/);
+  const microRawLine = microLineM ? microLineM[1] : '';
+  const micro = MICRO_ITEMS.filter(x => microRawLine.includes(x + '◯') || microRawLine.includes(x + '○'));
+
+  // Evening: execution level
+  const execM = raw.match(/## 1 【Execution level[^】]*】[^\n]*\n(\d+)/);
+  const execution = execM ? parseInt(execM[1]) : 0;
+
+  // Observe report
+  const observe = OBS_ITEMS.find(x => {
+    const escaped = x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp('- ' + escaped + '◯').test(raw) || new RegExp('- ' + escaped + '○').test(raw);
+  }) || '';
+
+  // Observe note
+  const obsNoteM = raw.match(/その他メモ（[^）]*）：\n([\s\S]*?)(?=\n## |\n---|\n# |$)/);
+  const observeNote = obsNoteM ? obsNoteM[1].trim() : '';
+
+  // Learning
+  const learning = LEARN_ITEMS.filter(x => {
+    const escaped = x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp('- ' + escaped + '◯').test(raw) || new RegExp('- ' + escaped + '○').test(raw);
+  });
+
+  // Learning note (after メモ line in evening section)
+  const learnNoteM = raw.match(/## 3 【Learning[\s\S]*?\nメモ\n([\s\S]*?)(?=\n## |\n# |$)/);
+  const learningNote = learnNoteM ? learnNoteM[1].trim() : '';
+
+  // Baton
+  const batonM = raw.match(/## 4 【明日の自分へのバトン】[^\n]*\n([\s\S]*?)(?=\n## |\n# |$)/);
+  const baton = batonM ? batonM[1].trim() : '';
+
+  const d = getData();
+  if (!d.daily[dateStr]) d.daily[dateStr] = {};
+  d.daily[dateStr].morning = { weather, value, action, place, barriersInt, barriersExt, barriersNote: '', microMain, micro, microNote: '' };
+  d.daily[dateStr].evening = { execution, observe, observeNote, learning, learningNote, baton };
+  setData(d);
+  return dateStr;
+}
+
+function importWeekly(raw) {
+  // Parse week start from "W○ (MM/DD～MM/DD)" or use today
+  let ws = '';
+  const wHeaderM = raw.match(/W\d*\s*\((\d{1,2})\/(\d{1,2})[～~](\d{1,2})\/(\d{1,2})\)/);
+  if (wHeaderM) {
+    const year = new Date().getFullYear();
+    const sm = parseInt(wHeaderM[1]);
+    const sd = parseInt(wHeaderM[2]);
+    const d = new Date(year, sm - 1, sd);
+    ws = d.toISOString().slice(0, 10);
+  } else {
+    ws = weekStart(today());
+  }
+
+  // Parse W number and title
+  const wNoM = raw.match(/^W(\d+)\s*\(/m);
+  const weekNo = wNoM ? wNoM[1] : '';
+  const wTitleM = raw.match(/W\d*\s*\([^)]*\)\s*([^\n]+)/);
+  const title = wTitleM ? wTitleM[1].trim() : '';
+
+  // Dates from header
+  let startMonth = '', startDay = '', endMonth = '', endDay = '';
+  if (wHeaderM) {
+    startMonth = wHeaderM[1]; startDay = wHeaderM[2];
+    endMonth = wHeaderM[3]; endDay = wHeaderM[4];
+  }
+
+  // Daily counts from "朝 ○回 / 夜 ○回"
+  const cntM = raw.match(/朝\s*(\d+)回\s*[\/／]\s*夜\s*(\d+)回/);
+  const morningCount = cntM ? cntM[1] : '0';
+  const eveningCount = cntM ? cntM[2] : '0';
+
+  // Section extractor: grab text between two section headers
+  function section(startPat, endPats) {
+    const sm = raw.search(startPat);
+    if (sm === -1) return '';
+    const after = raw.slice(sm);
+    const firstNewline = after.indexOf('\n');
+    const body = after.slice(firstNewline + 1);
+    let endIdx = body.length;
+    for (const ep of endPats) {
+      const em = body.search(ep);
+      if (em !== -1 && em < endIdx) endIdx = em;
+    }
+    return body.slice(0, endIdx).trim();
+  }
+
+  const ENDS = [/^## /m, /^# /m];
+
+  const log = section(/## 1 【事実と観察/, ENDS);
+  const w2Body = section(/## 2 【実験判断/, ENDS);
+  let worked = '', notWorked = '';
+  const workedM = w2Body.match(/うまくいったこととその理由\n([\s\S]*?)(?=うまくいかなかったこととその理由|$)/);
+  if (workedM) worked = workedM[1].trim();
+  const notWorkedM = w2Body.match(/うまくいかなかったこととその理由\n([\s\S]*?)$/);
+  if (notWorkedM) notWorked = notWorkedM[1].trim();
+
+  const v5M = raw.match(/・5年後の私は、([^\n]+)/); const value5 = v5M ? v5M[1].trim() : '';
+  const v3M = raw.match(/・3年後の私は、([^\n]+)/); const value3 = v3M ? v3M[1].trim() : '';
+  const v1M = raw.match(/・1年後の私は、([^\n]+)/); const value1 = v1M ? v1M[1].trim() : '';
+
+  const desiredM = raw.match(/【ありたい姿】[^\n]*\n([\s\S]*?)(?=【2026年のテーマ|$)/);
+  const desiredSelf = desiredM ? desiredM[1].trim() : '';
+  const themeM = raw.match(/【2026年のテーマ[^】]*】\n([\s\S]*?)(?=【ミッション|$)/);
+  const theme = themeM ? themeM[1].trim() : '';
+  const missionM = raw.match(/【ミッション[^】]*】\n([\s\S]*?)(?=【定着させたい習慣|$)/);
+  const mission = missionM ? missionM[1].trim() : '';
+  const habitM = raw.match(/【定着させたい習慣[^】]*】\n([\s\S]*?)(?=\n## |\n# |$)/);
+  const habit = habitM ? habitM[1].trim() : '';
+
+  const priority = section(/## 4 【優先順位/, ENDS);
+  const mindset = section(/## 5 【心得/, ENDS);
+  const plan = section(/## 6 【計画/, ENDS);
+
+  const manualBody = section(/## 【自分マニュアル】/, [/^## 【所感/m, /^# /m]);
+  const routineM = manualBody.match(/▼守るルーティン\n([\s\S]*?)(?=▼やらないことリスト|$)/);
+  const routine = routineM ? routineM[1].trim() : '';
+  const avoidM = manualBody.match(/▼やらないことリスト\n([\s\S]*?)$/);
+  const avoid = avoidM ? avoidM[1].trim() : '';
+
+  const memo = section(/## 【所感・メモ】/, [/^## /m, /^# /m]);
+
+  const d = getData();
+  d.weekly[ws] = { weekNo, startMonth, startDay, endMonth, endDay, title, morningCount, eveningCount,
+    log, worked, notWorked, value5, value3, value1, desiredSelf, theme, mission, habit,
+    priority, mindset, plan, routine, avoid, memo };
+  setData(d);
+  return ws;
+}
+
+// ─── Init ─────────────────────────────────────────────
+initCheckGroups();
+initMorningDate();
+initEveningDate();
+initWeeklyDate();
+loadMorning(document.getElementById('m-date').value);
+renderMorningRightPanel();
+</script>
+</body>
+</html>
